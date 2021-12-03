@@ -5,21 +5,6 @@ using System.Collections.Generic;
 
 namespace Star_2
 {
-    class Command
-    {
-        private string command { get; set; }
-        private int value { get; set; }
-
-        public string CommandGet() { return this.command; }
-        public int ValueGet() { return this.value; }
-
-        public Command(string command, int value)
-        {
-            this.command = command;
-            this.value = value;
-        }
-    }
-
     class Program
     {
         static void Main(string[] args)
@@ -27,35 +12,96 @@ namespace Star_2
             Console.WriteLine("Hello World from Star 2!");
 
             var fileLines = File.ReadLines("../../../../input.txt");
-            List<Command> commands = new List<Command>();
+            List<string> diagnosticReport = new List<string>();
 
             foreach (var item in fileLines)
             {
-                commands.Add(new Command(item.Split(' ')[0], int.Parse(item.Split(' ')[1])));
+                diagnosticReport.Add(item);
             }
 
-            int[] position = { 0, 0, 0 }; // x,y,aim
+            int oxygenGeneratorRating, CO2ScrubberRating;
 
-            foreach (var item in commands)
+            List<string> diagnosticReportCopy = new List<string>(diagnosticReport);
+            for (int i = 0; i < diagnosticReportCopy[0].Length; ++i)
             {
-                switch (item.CommandGet())
+                int numOf0s = 0, numOf1s = 0;
+
+                for (int j = 0; j < diagnosticReportCopy.Count; ++j)
                 {
-                    case "forward":
-                        position[0] += item.ValueGet();
-                        position[1] += position[2] * item.ValueGet();
-                        break;
-                    case "down":
-                        position[2] += item.ValueGet();
-                        break;
-                    case "up":
-                        position[2] -= item.ValueGet();
-                        break;
-                    default:
-                        break;
+                    if (diagnosticReportCopy[j][i] == '1')
+                    {
+                        ++numOf1s;
+                    }
+                    else
+                    {
+                        ++numOf0s;
+                    }
+                }
+
+                if (numOf1s >= numOf0s)
+                {
+                    for (int k = diagnosticReportCopy.Count - 1; diagnosticReportCopy.Count > 1 && k >= 0; --k)
+                    {
+                        if (diagnosticReportCopy[k][i] != '1')
+                        {
+                            diagnosticReportCopy.RemoveAt(k);
+                        }
+                    }
+                }
+                else
+                {
+                    for (int k = diagnosticReportCopy.Count - 1; diagnosticReportCopy.Count > 1 && k >= 0; --k)
+                    {
+                        if (diagnosticReportCopy[k][i] != '0')
+                        {
+                            diagnosticReportCopy.RemoveAt(k);
+                        }
+                    }
                 }
             }
+            oxygenGeneratorRating = Convert.ToInt32(diagnosticReportCopy[0], 2);
 
-            Console.WriteLine("position: {0},{1} aim:{3} Multiplied: {2}", position[0].ToString(), position[1].ToString(), (position[0] * position[1]).ToString(), position[2]);
+            diagnosticReportCopy = new List<string>(diagnosticReport);
+            for (int i = 0; i < diagnosticReportCopy[0].Length; ++i)
+            {
+                int numOf0s = 0, numOf1s = 0;
+
+                for (int j = 0; j < diagnosticReportCopy.Count; ++j)
+                {
+                    if (diagnosticReportCopy[j][i] == '1')
+                    {
+                        ++numOf1s;
+                    }
+                    else
+                    {
+                        ++numOf0s;
+                    }
+                }
+
+                if (numOf1s >= numOf0s)
+                {
+                    for (int k = diagnosticReportCopy.Count - 1; diagnosticReportCopy.Count > 1 && k >= 0; --k)
+                    {
+                        if (diagnosticReportCopy[k][i] != '0')
+                        {
+                            diagnosticReportCopy.RemoveAt(k);
+                        }
+                    }
+                }
+                else
+                {
+                    for (int k = diagnosticReportCopy.Count - 1; diagnosticReportCopy.Count > 1 && k >= 0; --k)
+                    {
+                        if (diagnosticReportCopy[k][i] != '1')
+                        {
+                            diagnosticReportCopy.RemoveAt(k);
+                        }
+                    }
+                }
+            }
+            CO2ScrubberRating = Convert.ToInt32(diagnosticReportCopy[0], 2);
+
+            Console.WriteLine("oxygenGeneratorRating: {1} CO2ScrubberRating: {2} Output: {0}", oxygenGeneratorRating * CO2ScrubberRating, oxygenGeneratorRating, CO2ScrubberRating);
         }
     }
 }

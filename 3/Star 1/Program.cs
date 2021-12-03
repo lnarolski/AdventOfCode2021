@@ -5,21 +5,6 @@ using System.Linq;
 
 namespace Star_1
 {
-    class Command
-    {
-        private string command { get; set; }
-        private int value { get; set; }
-
-        public string CommandGet() { return this.command; }
-        public int ValueGet() { return this.value; }
-
-        public Command(string command, int value)
-        {
-            this.command = command;
-            this.value = value;
-        }
-    }
-
     class Program
     {
         static void Main(string[] args)
