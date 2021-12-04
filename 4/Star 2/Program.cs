@@ -1,10 +1,35 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Collections.Generic;
 
 namespace Star_2
 {
+    class BingoNumber
+    {
+        public int bingoNumber;
+        public bool marked = false;
+
+        public BingoNumber(int bingoNumber)
+        {
+            this.bingoNumber = bingoNumber;
+        }
+    }
+    class BingoLine
+    {
+        public List<BingoNumber> bingoLine;
+        public int numOfFoundNumbersRow = 0;
+        public List<int> numOfFoundNumbersColumn = new List<int> {0,0,0,0,0};
+
+        public BingoLine(int[] bingoLine)
+        {
+            this.bingoLine = new List<BingoNumber>();
+            foreach (var item in bingoLine)
+            {
+                this.bingoLine.Add(new BingoNumber(item));
+            }
+        }
+    }
     class Program
     {
         static void Main(string[] args)
@@ -12,96 +37,87 @@ namespace Star_2
             Console.WriteLine("Hello World from Star 2!");
 
             var fileLines = File.ReadLines("../../../../input.txt");
-            List<string> diagnosticReport = new List<string>();
+            List<string> input = new List<string>();
 
             foreach (var item in fileLines)
             {
-                diagnosticReport.Add(item);
+                input.Add(item);
             }
 
-            int oxygenGeneratorRating, CO2ScrubberRating;
+            // Parsing input data
+            int[] generatedNumbers = input[0].Split(',').Select(s => int.Parse(s)).ToArray();
+            List<List<BingoLine>> boards = new List<List<BingoLine>>();
 
-            List<string> diagnosticReportCopy = new List<string>(diagnosticReport);
-            for (int i = 0; i < diagnosticReportCopy[0].Length; ++i)
+            boards.Add(new List<BingoLine>());
+            int inputLine = 2;
+            while (inputLine < input.Count)
             {
-                int numOf0s = 0, numOf1s = 0;
-
-                for (int j = 0; j < diagnosticReportCopy.Count; ++j)
+                if (input[inputLine] == "")
                 {
-                    if (diagnosticReportCopy[j][i] == '1')
-                    {
-                        ++numOf1s;
-                    }
-                    else
-                    {
-                        ++numOf0s;
-                    }
-                }
-
-                if (numOf1s >= numOf0s)
-                {
-                    for (int k = diagnosticReportCopy.Count - 1; diagnosticReportCopy.Count > 1 && k >= 0; --k)
-                    {
-                        if (diagnosticReportCopy[k][i] != '1')
-                        {
-                            diagnosticReportCopy.RemoveAt(k);
-                        }
-                    }
+                    boards.Add(new List<BingoLine>());
                 }
                 else
                 {
-                    for (int k = diagnosticReportCopy.Count - 1; diagnosticReportCopy.Count > 1 && k >= 0; --k)
-                    {
-                        if (diagnosticReportCopy[k][i] != '0')
-                        {
-                            diagnosticReportCopy.RemoveAt(k);
-                        }
-                    }
+                    boards[boards.Count - 1].Add(new BingoLine(input[inputLine].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(s => int.Parse(s)).ToArray()));
                 }
-            }
-            oxygenGeneratorRating = Convert.ToInt32(diagnosticReportCopy[0], 2);
 
-            diagnosticReportCopy = new List<string>(diagnosticReport);
-            for (int i = 0; i < diagnosticReportCopy[0].Length; ++i)
+                ++inputLine;
+            }
+            //
+
+            // Searching for an answer
+            bool found = false;
+            int sumOfUnmarkedNumbers = 0, numberThatWasJustCalled = -1, winningBoard = -1, wonBoards = 0;
+            List<int> ignoreBoards = new List<int>();
+
+            for (int l = 0; wonBoards != boards.Count && l < generatedNumbers.Length; l++)
             {
-                int numOf0s = 0, numOf1s = 0;
-
-                for (int j = 0; j < diagnosticReportCopy.Count; ++j)
+                for (int i = 0; i < boards.Count; i++)
                 {
-                    if (diagnosticReportCopy[j][i] == '1')
+                    for (int j = 0; !ignoreBoards.Contains(i) && j < boards[i].Count; j++) // rows
                     {
-                        ++numOf1s;
-                    }
-                    else
-                    {
-                        ++numOf0s;
-                    }
-                }
-
-                if (numOf1s >= numOf0s)
-                {
-                    for (int k = diagnosticReportCopy.Count - 1; diagnosticReportCopy.Count > 1 && k >= 0; --k)
-                    {
-                        if (diagnosticReportCopy[k][i] != '0')
+                        for (int k = 0; k < boards[i][j].bingoLine.Count; k++)
                         {
-                            diagnosticReportCopy.RemoveAt(k);
+                            if (generatedNumbers[l] == boards[i][j].bingoLine[k].bingoNumber)
+                            {
+                                boards[i][j].bingoLine[k].marked = true;
+                                ++boards[i][j].numOfFoundNumbersRow;
+                                ++boards[i][0].numOfFoundNumbersColumn[k];
+
+                                break;
+                            }
+                        }
+
+                        if (boards[i][j].numOfFoundNumbersRow == boards[i][j].bingoLine.Count || boards[i][0].numOfFoundNumbersColumn.Contains(boards[i].Count))
+                        {
+                            found = true;
                         }
                     }
-                }
-                else
-                {
-                    for (int k = diagnosticReportCopy.Count - 1; diagnosticReportCopy.Count > 1 && k >= 0; --k)
+
+                    if (found)
                     {
-                        if (diagnosticReportCopy[k][i] != '1')
-                        {
-                            diagnosticReportCopy.RemoveAt(k);
-                        }
+                        winningBoard = i;
+                        ignoreBoards.Add(i);
+
+                        numberThatWasJustCalled = generatedNumbers[l];
+                        ++wonBoards;
+
+                        found = false;
                     }
                 }
             }
-            CO2ScrubberRating = Convert.ToInt32(diagnosticReportCopy[0], 2);
 
-            Console.WriteLine("oxygenGeneratorRating: {1} CO2ScrubberRating: {2} Output: {0}", oxygenGeneratorRating * CO2ScrubberRating, oxygenGeneratorRating, CO2ScrubberRating);
+            for (int i = 0; i < boards[winningBoard].Count; ++i)
+            {
+                for (int j = 0; j < boards[winningBoard][i].bingoLine.Count; ++j)
+                {
+                    if (boards[winningBoard][i].bingoLine[j].marked == false)
+                        sumOfUnmarkedNumbers += boards[winningBoard][i].bingoLine[j].bingoNumber;
+                }
+            }
+            //
+
+            Console.WriteLine("Output: {0}", sumOfUnmarkedNumbers * numberThatWasJustCalled);
         }
     }
 }
