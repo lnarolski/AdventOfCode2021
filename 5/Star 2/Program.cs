@@ -5,30 +5,10 @@ using System.Linq;
 
 namespace Star_2
 {
-    class BingoNumber
+    class Line
     {
-        public int bingoNumber;
-        public bool marked = false;
-
-        public BingoNumber(int bingoNumber)
-        {
-            this.bingoNumber = bingoNumber;
-        }
-    }
-    class BingoLine
-    {
-        public List<BingoNumber> bingoLine;
-        public int numOfFoundNumbersRow = 0;
-        public List<int> numOfFoundNumbersColumn = new List<int> {0,0,0,0,0};
-
-        public BingoLine(int[] bingoLine)
-        {
-            this.bingoLine = new List<BingoNumber>();
-            foreach (var item in bingoLine)
-            {
-                this.bingoLine.Add(new BingoNumber(item));
-            }
-        }
+        public int x1, y1;
+        public int x2, y2;
     }
     class Program
     {
@@ -45,79 +25,94 @@ namespace Star_2
             }
 
             // Parsing input data
-            int[] generatedNumbers = input[0].Split(',').Select(s => int.Parse(s)).ToArray();
-            List<List<BingoLine>> boards = new List<List<BingoLine>>();
+            int maxX = 1000, maxY = 1000;
+            List<Line> lines = new List<Line>();
 
-            boards.Add(new List<BingoLine>());
-            int inputLine = 2;
-            while (inputLine < input.Count)
+            foreach (var item in input)
             {
-                if (input[inputLine] == "")
+                var coordinates = item.Split(" -> ");
+                lines.Add(new Line()
                 {
-                    boards.Add(new List<BingoLine>());
-                }
-                else
-                {
-                    boards[boards.Count - 1].Add(new BingoLine(input[inputLine].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(s => int.Parse(s)).ToArray()));
-                }
-
-                ++inputLine;
+                    x1 = int.Parse(coordinates[0].Split(',')[0]),
+                    y1 = int.Parse(coordinates[0].Split(',')[1]),
+                    x2 = int.Parse(coordinates[1].Split(',')[0]),
+                    y2 = int.Parse(coordinates[1].Split(',')[1]),
+                });
             }
+
+            int[,] map = new int[maxY + 1, maxX + 1];
             //
 
             // Searching for an answer
-            bool found = false;
-            int sumOfUnmarkedNumbers = 0, numberThatWasJustCalled = -1, winningBoard = -1, wonBoards = 0;
-            List<int> ignoreBoards = new List<int>();
-
-            for (int l = 0; wonBoards != boards.Count && l < generatedNumbers.Length; l++)
+            foreach (var item in lines)
             {
-                for (int i = 0; i < boards.Count; i++)
+                int distance = (int)Math.Sqrt(Math.Pow(item.x2 - item.x1, 2) + Math.Pow(item.y2 - item.y1, 2));
+                for (int i = 0; i < distance + 1; i++)
                 {
-                    for (int j = 0; !ignoreBoards.Contains(i) && j < boards[i].Count; j++) // rows
-                    {
-                        for (int k = 0; k < boards[i][j].bingoLine.Count; k++)
-                        {
-                            if (generatedNumbers[l] == boards[i][j].bingoLine[k].bingoNumber)
-                            {
-                                boards[i][j].bingoLine[k].marked = true;
-                                ++boards[i][j].numOfFoundNumbersRow;
-                                ++boards[i][0].numOfFoundNumbersColumn[k];
+                    int x;
+                    int y;
 
+                    if (item.x1 < item.x2)
+                    {
+                        double a = (item.y2 - item.y1) / (item.x2 - item.x1);
+                        double b = item.y1 - a * item.x1;
+
+                        x = item.x1 + i;
+
+                        if (x > item.x2)
+                            break;
+
+                        y = (int)(a * (item.x1 + i) + b);
+                    }
+                    else if (item.x1 > item.x2)
+                    {
+                        double a = (item.y2 - item.y1) / (item.x2 - item.x1);
+                        double b = item.y1 - a * item.x1;
+
+                        x = item.x2 + i;
+                        y = (int)(a * (item.x2 + i) + b);
+
+                        if (x > item.x1)
+                            break;
+                    }
+                    else
+                    {
+                        if (item.y1 < item.y2)
+                        {
+                            x = item.x1;
+                            y = item.y1 + i;
+
+                            if (y > item.y2)
                                 break;
-                            }
                         }
-
-                        if (boards[i][j].numOfFoundNumbersRow == boards[i][j].bingoLine.Count || boards[i][0].numOfFoundNumbersColumn.Contains(boards[i].Count))
+                        else
                         {
-                            found = true;
+                            x = item.x1;
+                            y = item.y2 + i;
+
+                            if (y > item.y1)
+                                break;
                         }
                     }
 
-                    if (found)
-                    {
-                        winningBoard = i;
-                        ignoreBoards.Add(i);
-
-                        numberThatWasJustCalled = generatedNumbers[l];
-                        ++wonBoards;
-
-                        found = false;
-                    }
+                    ++map[y, x];
                 }
             }
 
-            for (int i = 0; i < boards[winningBoard].Count; ++i)
+            int foundIntersections = 0;
+            for (int y = 0; y < maxY; y++)
             {
-                for (int j = 0; j < boards[winningBoard][i].bingoLine.Count; ++j)
+                for (int x = 0; x < maxX; x++)
                 {
-                    if (boards[winningBoard][i].bingoLine[j].marked == false)
-                        sumOfUnmarkedNumbers += boards[winningBoard][i].bingoLine[j].bingoNumber;
+                    if (map[y, x] > 1)
+                    {
+                        ++foundIntersections;
+                    }
                 }
             }
             //
 
-            Console.WriteLine("Output: {0}", sumOfUnmarkedNumbers * numberThatWasJustCalled);
+            Console.WriteLine("Output: {0}", foundIntersections);
         }
     }
 }
