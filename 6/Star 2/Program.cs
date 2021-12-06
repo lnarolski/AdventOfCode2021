@@ -5,11 +5,6 @@ using System.Linq;
 
 namespace Star_2
 {
-    class Line
-    {
-        public int x1, y1;
-        public int x2, y2;
-    }
     class Program
     {
         static void Main(string[] args)
@@ -25,94 +20,39 @@ namespace Star_2
             }
 
             // Parsing input data
-            int maxX = 1000, maxY = 1000;
-            List<Line> lines = new List<Line>();
-
-            foreach (var item in input)
+            Dictionary<long, long> fishList = new Dictionary<long, long>() { { -1, 0 }, { 0, 0 }, { 1, 0 }, { 2, 0 }, { 3, 0 }, { 4, 0 }, { 5, 0 }, { 6, 0 }, { 7, 0 }, { 8, 0 } };
+            List<long> tempList = input[0].Split(',').Select(s => long.Parse(s)).ToList();
+            foreach (var item in tempList)
             {
-                var coordinates = item.Split(" -> ");
-                lines.Add(new Line()
-                {
-                    x1 = int.Parse(coordinates[0].Split(',')[0]),
-                    y1 = int.Parse(coordinates[0].Split(',')[1]),
-                    x2 = int.Parse(coordinates[1].Split(',')[0]),
-                    y2 = int.Parse(coordinates[1].Split(',')[1]),
-                });
+                ++fishList[item];
             }
-
-            int[,] map = new int[maxY + 1, maxX + 1];
             //
 
             // Searching for an answer
-            foreach (var item in lines)
+            long numOfDays = 256;
+            for (int i = 0; i < numOfDays; i++)
             {
-                int distance = (int)Math.Sqrt(Math.Pow(item.x2 - item.x1, 2) + Math.Pow(item.y2 - item.y1, 2));
-                for (int i = 0; i < distance + 1; i++)
+                long fishToAdd = 0;
+                for (int j = 0; j < fishList.Count - 1; ++j)
                 {
-                    int x;
-                    int y;
-
-                    if (item.x1 < item.x2)
+                    fishList[j - 1] = fishList[j];
+                    if (j - 1 == -1)
                     {
-                        double a = (item.y2 - item.y1) / (item.x2 - item.x1);
-                        double b = item.y1 - a * item.x1;
-
-                        x = item.x1 + i;
-
-                        if (x > item.x2)
-                            break;
-
-                        y = (int)(a * (item.x1 + i) + b);
+                        fishToAdd = fishList[-1];
+                        fishList[-1] = 0;
                     }
-                    else if (item.x1 > item.x2)
-                    {
-                        double a = (item.y2 - item.y1) / (item.x2 - item.x1);
-                        double b = item.y1 - a * item.x1;
-
-                        x = item.x2 + i;
-                        y = (int)(a * (item.x2 + i) + b);
-
-                        if (x > item.x1)
-                            break;
-                    }
-                    else
-                    {
-                        if (item.y1 < item.y2)
-                        {
-                            x = item.x1;
-                            y = item.y1 + i;
-
-                            if (y > item.y2)
-                                break;
-                        }
-                        else
-                        {
-                            x = item.x1;
-                            y = item.y2 + i;
-
-                            if (y > item.y1)
-                                break;
-                        }
-                    }
-
-                    ++map[y, x];
                 }
+                fishList[8] = fishToAdd;
+                fishList[6] += fishToAdd;
             }
-
-            int foundIntersections = 0;
-            for (int y = 0; y < maxY; y++)
+            long sumOfFish = 0;
+            foreach (var item in fishList)
             {
-                for (int x = 0; x < maxX; x++)
-                {
-                    if (map[y, x] > 1)
-                    {
-                        ++foundIntersections;
-                    }
-                }
+                sumOfFish += item.Value;
             }
             //
 
-            Console.WriteLine("Output: {0}", foundIntersections);
+            Console.WriteLine("Output: {0}", sumOfFish);
         }
     }
 }
