@@ -20,39 +20,65 @@ namespace Star_2
             }
 
             // Parsing input data
-            Dictionary<long, long> fishList = new Dictionary<long, long>() { { -1, 0 }, { 0, 0 }, { 1, 0 }, { 2, 0 }, { 3, 0 }, { 4, 0 }, { 5, 0 }, { 6, 0 }, { 7, 0 }, { 8, 0 } };
-            List<long> tempList = input[0].Split(',').Select(s => long.Parse(s)).ToList();
-            foreach (var item in tempList)
+            List<long> fileLinesInt;
+            fileLinesInt = input[0].Split(',').Select(s => long.Parse(s)).ToList();
+            Dictionary<long, long> crabPositions = new Dictionary<long, long>();
+            long minValue = long.MaxValue, maxValue = long.MinValue;
+            foreach (var item in fileLinesInt)
             {
-                ++fishList[item];
+                if (crabPositions.ContainsKey(item))
+                {
+                    ++crabPositions[item];
+                }
+                else
+                {
+                    crabPositions.Add(item, 1);
+                }
+
+                if (item < minValue)
+                    minValue = item;
+                if (item > maxValue)
+                    maxValue = item;
+            }
+            for (long i = minValue; i <= maxValue; i++)
+            {
+                if (!crabPositions.ContainsKey(i))
+                    crabPositions.Add(i, 0);
             }
             //
 
             // Searching for an answer
-            long numOfDays = 256;
-            for (int i = 0; i < numOfDays; i++)
+            long minimumFuel = long.MaxValue;
+            long foundPosition = -1;
+            foreach (var positionToCheck in crabPositions)
             {
-                long fishToAdd = 0;
-                for (int j = 0; j < fishList.Count - 1; ++j)
+                long sumOfFuel = 0;
+                foreach (var position in crabPositions)
                 {
-                    fishList[j - 1] = fishList[j];
-                    if (j - 1 == -1)
+                    if (positionToCheck.Key == position.Key || position.Value == 0)
+                        continue;
+
+                    if (position.Key < positionToCheck.Key)
                     {
-                        fishToAdd = fishList[-1];
-                        fishList[-1] = 0;
+                        long n = positionToCheck.Key - position.Key;
+                        sumOfFuel += ((n * (n + 1)) / 2) * position.Value;
+                    }
+                    else
+                    {
+                        long n = position.Key - positionToCheck.Key;
+                        sumOfFuel += ((n * (n + 1)) / 2) * position.Value;
                     }
                 }
-                fishList[8] = fishToAdd;
-                fishList[6] += fishToAdd;
-            }
-            long sumOfFish = 0;
-            foreach (var item in fishList)
-            {
-                sumOfFish += item.Value;
+
+                if (sumOfFuel < minimumFuel)
+                {
+                    minimumFuel = sumOfFuel;
+                    foundPosition = positionToCheck.Key;
+                }
             }
             //
 
-            Console.WriteLine("Output: {0}", sumOfFish);
+            Console.WriteLine("Output: {0} foundPosition: {1}", minimumFuel, foundPosition);
         }
     }
 }
