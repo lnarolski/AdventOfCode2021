@@ -20,32 +20,50 @@ namespace Star_1
             }
 
             // Parsing input data
-            List<int> fishList = new List<int>();
-            fishList = input[0].Split(',').Select(s => int.Parse(s)).ToList();
-            //
-
-            // Searching for an answer
-            int numOfDays = 80;
-            for (int i = 0; i < numOfDays; i++)
+            List<long> fileLinesInt;
+            fileLinesInt = input[0].Split(',').Select(s => long.Parse(s)).ToList();
+            Dictionary<long, long> crabPositions = new Dictionary<long, long>();
+            foreach (var item in fileLinesInt)
             {
-                List<int> fishToAdd = new List<int>();
-                for (int j = 0; j < fishList.Count; j++)
+                if (crabPositions.ContainsKey(item))
                 {
-                    --fishList[j];
-                    if (fishList[j] < 0)
-                    {
-                        fishList[j] = 6;
-                        fishToAdd.Add(8);
-                    }
+                    ++crabPositions[item];
                 }
-                foreach (var item in fishToAdd)
+                else
                 {
-                    fishList.Add(item);
+                    crabPositions.Add(item, 1);
                 }
             }
             //
 
-            Console.WriteLine("Output: {0}", fishList.Count);
+            // Searching for an answer
+            long minimumFuel = long.MaxValue;
+            foreach (var positionToCheck in crabPositions)
+            {
+                long sumOfFuel = 0;
+                foreach (var position in crabPositions)
+                {
+                    if (positionToCheck.Key == position.Key)
+                        continue;
+
+                    if (position.Key < positionToCheck.Key)
+                    {
+                        sumOfFuel += (positionToCheck.Key - position.Key) * position.Value;
+                    }
+                    else
+                    {
+                        sumOfFuel += (position.Key - positionToCheck.Key) * position.Value;
+                    }
+                }
+
+                if (sumOfFuel < minimumFuel)
+                {
+                    minimumFuel = sumOfFuel;
+                }
+            }
+            //
+
+            Console.WriteLine("Output: {0}", minimumFuel);
         }
     }
 }
