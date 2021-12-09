@@ -3,10 +3,182 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Star_2
+namespace Star_1
 {
     class Program
     {
+        static private bool IsLowpoint(int x, int y, List<List<Point>> map)
+        {
+            if (x != 0 && map[y][x].value >= map[y][x - 1].value) // left
+                return false;
+            if (x != map[0].Count - 1 && map[y][x].value >= map[y][x + 1].value) //right
+                return false;
+            if (y != 0 && map[y][x].value >= map[y - 1][x].value) //up
+                return false;
+            if (y != map.Count - 1 && map[y][x].value >= map[y + 1][x].value) //down
+                return false;
+
+            return true;
+        }
+
+        enum Direction
+        {
+            up,
+            down,
+            left,
+            right
+        }
+
+        class Calculator // object traveling throught basin
+        {
+            Direction direction;
+            public long calculated = 0;
+            int x;
+            int y;
+            public bool stopped = false;
+            List<List<Point>> map;
+            List<Calculator> calculatorsToAdd;
+
+            public Calculator(int x, int y, Direction direction, List<List<Point>> map, List<Calculator> calculatorsToAdd)
+            {
+                this.x = x;
+                this.y = y;
+                this.direction = direction;
+                this.map = map;
+                this.calculatorsToAdd = calculatorsToAdd;
+            }
+
+            public bool Move()
+            {
+                switch (direction)
+                {
+                    case Direction.up:
+                        if (y == 0 || map[y - 1][x].counted || map[y - 1][x].value == 9)
+                        {
+                            stopped = true;
+                            return false;
+                        }
+                        else
+                        {
+                            --this.y;
+                        }
+                        break;
+                    case Direction.down:
+                        if (y == map.Count - 1 || map[y + 1][x].counted || map[y + 1][x].value == 9)
+                        {
+                            stopped = true;
+                            return false;
+                        }
+                        else
+                        {
+                            ++this.y;
+                        }
+                        break;
+                    case Direction.left:
+                        if (x == 0 || map[y][x - 1].counted || map[y][x - 1].value == 9)
+                        {
+                            stopped = true;
+                            return false;
+                        }
+                        else
+                        {
+                            --this.x;
+                        }
+                        break;
+                    case Direction.right:
+                        if (x == map[0].Count - 1 || map[y][x + 1].counted || map[y][x + 1].value == 9)
+                        {
+                            stopped = true;
+                            return false;
+                        }
+                        else
+                        {
+                            ++this.x;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+
+                ++calculated;
+                map[y][x].counted = true;
+
+                if (direction == Direction.up || direction == Direction.down)
+                {
+                    if (x != map[0].Count - 1 && !map[y][x + 1].counted && map[y][x + 1].value != 9) //right
+                    {
+                        calculatorsToAdd.Add(new Calculator(x, y, Direction.right, map, calculatorsToAdd));
+                    }
+                    if (x != 0 && !map[y][x - 1].counted && map[y][x - 1].value != 9) //left
+                    {
+                        calculatorsToAdd.Add(new Calculator(x, y, Direction.left, map, calculatorsToAdd));
+                    }
+                }
+                else
+                {
+                    if (y != map.Count - 1 && !map[y + 1][x].counted && map[y + 1][x].value != 9) //down
+                    {
+                        calculatorsToAdd.Add(new Calculator(x, y, Direction.down, map, calculatorsToAdd));
+                    }
+                    if (y != 0 && !map[y - 1][x].counted && map[y - 1][x].value != 9) //up
+                    {
+                        calculatorsToAdd.Add(new Calculator(x, y, Direction.up, map, calculatorsToAdd));
+                    }
+                }
+
+                return true;
+            }
+        }
+
+        static private long CalculateBasinSize(int x, int y, List<List<Point>> map)
+        {
+            long basinSize = 1;
+            List<Calculator> calculators = new List<Calculator>();
+            List<Calculator> calculatorsToAdd = new List<Calculator>();
+            List<int> calculatorsToDelete = new List<int>();
+
+            if (x != 0 && !map[y][x - 1].counted && map[y][x - 1].value != 9) // left
+                calculators.Add(new Calculator(x, y, Direction.left, map, calculatorsToAdd));
+            if (x != map[0].Count - 1 && !map[y][x + 1].counted && map[y][x + 1].value != 9) //right
+                calculators.Add(new Calculator(x, y, Direction.right, map, calculatorsToAdd));
+            if (y != 0 && !map[y - 1][x].counted && map[y - 1][x].value != 9) //up
+                calculators.Add(new Calculator(x, y, Direction.up, map, calculatorsToAdd));
+            if (y != map.Count - 1 && !map[y + 1][x].counted && map[y + 1][x].value != 9) //down
+                calculators.Add(new Calculator(x, y, Direction.down, map, calculatorsToAdd));
+
+            while (calculators.Count > 0)
+            {
+                for (int i = 0; i < calculators.Count; i++)
+                {
+                    if (!calculators[i].Move())
+                    {
+                        basinSize += calculators[i].calculated;
+                        calculatorsToDelete.Add(i);
+                    }
+                }
+
+                for (int i = calculatorsToDelete.Count - 1; i >= 0; --i)
+                {
+                    calculators.RemoveAt(calculatorsToDelete[i]);
+                }
+                calculatorsToDelete.Clear();
+
+                foreach (var calculator in calculatorsToAdd)
+                {
+                    calculators.Add(calculator);
+                }
+                calculatorsToAdd.Clear();
+            }
+
+            return basinSize;
+        }
+
+        class Point
+        {
+            public long value { set; get; }
+            public bool counted { set; get; }
+        }
+
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World from Star 2!");
@@ -20,240 +192,40 @@ namespace Star_2
             }
 
             // Parsing input data
-            //
-            //  dddd     0000
-            // e    a   1    2
-            // e    a   1    2
-            //  ffff     3333
-            // g    b   4    5
-            // g    b   4    5
-            //  cccc     6666
-            //
-            // 0 -> 6,++
-            // 1 -> 2,
-            // 2 -> 5,
-            // 3 -> 5,
-            // 4 -> 4,
-            // 5 -> 5,
-            // 6 -> 6,++
-            // 7 -> 3,
-            // 8 -> 7,
-            // 9 -> 6++
-
-            List<long> outputNumbers = new List<long>();
+            List<List<long>> temp = new List<List<long>>();
             foreach (var line in fileLines)
             {
-                Dictionary<string, long> numbersOnDisplayString = new Dictionary<string, long>();
-                Dictionary<long, string> numbersOnDisplayLong = new Dictionary<long, string>();
-                var temp = line.Split(" | ");
-                List<string> numbersForDeduction = temp[0].Split(' ').ToList();
-                List<string> numbersToDecode = temp[1].Split(' ').ToList();
-
-                numbersOnDisplayString.Add(numbersForDeduction.Find(x => x.Length == 2), 1); // 1
-                numbersOnDisplayLong.Add(1, numbersForDeduction.Find(x => x.Length == 2)); // 1
-                numbersForDeduction.Remove(numbersForDeduction.Find(x => x.Length == 2));
-                numbersOnDisplayString.Add(numbersForDeduction.Find(x => x.Length == 4), 4); // 4
-                numbersOnDisplayLong.Add(4, numbersForDeduction.Find(x => x.Length == 4)); // 4
-                numbersForDeduction.Remove(numbersForDeduction.Find(x => x.Length == 4));
-                numbersOnDisplayString.Add(numbersForDeduction.Find(x => x.Length == 3), 7); // 7
-                numbersOnDisplayLong.Add(7, numbersForDeduction.Find(x => x.Length == 3)); // 7
-                numbersForDeduction.Remove(numbersForDeduction.Find(x => x.Length == 3));
-                numbersOnDisplayString.Add(numbersForDeduction.Find(x => x.Length == 7), 8); // 8
-                numbersOnDisplayLong.Add(8, numbersForDeduction.Find(x => x.Length == 7)); // 8
-                numbersForDeduction.Remove(numbersForDeduction.Find(x => x.Length == 7));
-
-                // Find 2
-                foreach (var item in numbersForDeduction)
-                {
-                    if (item.Length == 5)
-                    {
-                        int charactersFound = 0;
-                        int charactersNotFound = 0;
-                        foreach (var character in numbersOnDisplayLong[4])
-                        {
-                            if (item.Contains(character))
-                                ++charactersFound;
-                            else
-                                ++charactersNotFound;
-                        }
-
-                        if (charactersNotFound == 2 && charactersFound == 2)
-                        {
-                            numbersOnDisplayString.Add(item, 2);
-                            numbersOnDisplayLong.Add(2, item);
-                            numbersForDeduction.Remove(item);
-                            break;
-                        }
-                    }
-                }
-
-                // Find 0
-                foreach (var item in numbersForDeduction)
-                {
-                    if (item.Length == 6)
-                    {
-                        int charactersFound = 0;
-                        int charactersNotFound = 0;
-                        foreach (var character in numbersOnDisplayLong[8])
-                        {
-                            if (item.Contains(character))
-                                ++charactersFound;
-                            else
-                                ++charactersNotFound;
-                        }
-                        foreach (var character in numbersOnDisplayLong[4])
-                        {
-                            if (item.Contains(character))
-                                ++charactersFound;
-                            else
-                                ++charactersNotFound;
-                        }
-                        foreach (var character in numbersOnDisplayLong[7])
-                        {
-                            if (item.Contains(character))
-                                ++charactersFound;
-                            else
-                                ++charactersNotFound;
-                        }
-
-                        if (charactersNotFound == 2 && charactersFound == 12)
-                        {
-                            numbersOnDisplayString.Add(item, 0);
-                            numbersOnDisplayLong.Add(0, item);
-                            numbersForDeduction.Remove(item);
-                            break;
-                        }
-                    }
-                }
-
-                // Find 6
-                foreach (var item in numbersForDeduction)
-                {
-                    if (item.Length == 6)
-                    {
-                        int charactersFound = 0;
-                        int charactersNotFound = 0;
-                        foreach (var character in numbersOnDisplayLong[0])
-                        {
-                            if (item.Contains(character))
-                                ++charactersFound;
-                            else
-                                ++charactersNotFound;
-                        }
-                        foreach (var character in numbersOnDisplayLong[1])
-                        {
-                            if (item.Contains(character))
-                                ++charactersFound;
-                            else
-                                ++charactersNotFound;
-                        }
-
-                        if (charactersNotFound == 2 && charactersFound == 6)
-                        {
-                            numbersOnDisplayString.Add(item, 6);
-                            numbersOnDisplayLong.Add(6, item);
-                            numbersForDeduction.Remove(item);
-                            break;
-                        }
-                    }
-                }
-
-                // Find 3
-                foreach (var item in numbersForDeduction)
-                {
-                    if (item.Length == 5)
-                    {
-                        int charactersFound = 0;
-                        int charactersNotFound = 0;
-                        foreach (var character in numbersOnDisplayLong[6])
-                        {
-                            if (item.Contains(character))
-                                ++charactersFound;
-                            else
-                                ++charactersNotFound;
-                        }
-                        foreach (var character in numbersOnDisplayLong[1])
-                        {
-                            if (item.Contains(character))
-                                ++charactersFound;
-                            else
-                                ++charactersNotFound;
-                        }
-                        foreach (var character in numbersOnDisplayLong[2])
-                        {
-                            if (item.Contains(character))
-                                ++charactersFound;
-                            else
-                                ++charactersNotFound;
-                        }
-
-                        if (charactersNotFound == 3 && charactersFound == 10)
-                        {
-                            numbersOnDisplayString.Add(item, 3);
-                            numbersOnDisplayLong.Add(3, item);
-                            numbersForDeduction.Remove(item);
-                            break;
-                        }
-                    }
-                }
-
-                // Find 5
-                foreach (var item in numbersForDeduction)
-                {
-                    if (item.Length == 5)
-                    {
-                        numbersOnDisplayString.Add(item, 5);
-                        numbersOnDisplayLong.Add(5, item);
-                        numbersForDeduction.Remove(item);
-                        break;
-                    }
-                }
-
-                // Find 9
-                numbersOnDisplayString.Add(numbersForDeduction[0], 9);
-                numbersOnDisplayLong.Add(9 ,numbersForDeduction[0]);
-
-                // Decode output number
-                long outputNumberToAdd = 0;
-                for (int i = 0; i < numbersToDecode.Count; i++)
-                {
-                    foreach (var item in numbersOnDisplayString)
-                    {
-                        if (item.Key.Length == numbersToDecode[i].Length)
-                        {
-                            bool foundKey = true;
-
-                            foreach (var character in item.Key)
-                            {
-                                if (!numbersToDecode[i].Contains(character))
-                                {
-                                    foundKey = false;
-                                    break;
-                                }
-                            }
-
-                            if (foundKey)
-                            {
-                                outputNumberToAdd += item.Value * (long)(Math.Pow(10, 3 - i));
-                                break;
-                            }
-                        }
-                    }
-                }
-                outputNumbers.Add(outputNumberToAdd);
-
-                // 1, 2, 4, 7, 8, 0, 6, 3, 5, 9 found
+                temp.Add(line.ToCharArray().Select(s => long.Parse(s.ToString())).ToList());
             }
-
-            // Searching for an answer
-            long sumOfNumbers = 0;
-            foreach (var item in outputNumbers)
+            List<List<Point>> map = new List<List<Point>>();
+            for (int i = 0; i < temp.Count; i++)
             {
-                sumOfNumbers += item;
+                map.Add(new List<Point>());
+                for (int j = 0; j < temp[0].Count; j++)
+                {
+                    map[map.Count - 1].Add(new Point() { value = temp[i][j], counted = false });
+                }
             }
             //
 
-            Console.WriteLine("Output: {0}", sumOfNumbers);
+            // Searching for an answer
+            List<long> basinSizes = new List<long>();
+            for (int y = 0; y < map.Count; y++)
+            {
+                for (int x = 0; x < map[0].Count; x++)
+                {
+                    if (IsLowpoint(x, y, map))
+                    {
+                        map[y][x].counted = true;
+                        basinSizes.Add(CalculateBasinSize(x, y, map));
+                    }
+                }
+            }
+            basinSizes.Sort();
+            long multiplication = basinSizes[basinSizes.Count - 1] * basinSizes[basinSizes.Count - 2] * basinSizes[basinSizes.Count - 3];
+            //
+
+            Console.WriteLine("Output: {0}", multiplication);
         }
     }
 }
