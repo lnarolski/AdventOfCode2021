@@ -81,8 +81,9 @@ namespace Star_2
 
             // Searching for an answer
             long numOfFlashes = 0;
-            long maxSteps = 100;
-            for (int i = 0; i < maxSteps; i++)
+            int step = 1;
+            bool stop = false;
+            while (!stop)
             {
                 for (int y = 0; y < map.Count; y++)
                 {
@@ -121,12 +122,29 @@ namespace Star_2
                         }
                     }
                 }
+
+                bool allOctopusesFlush = true;
+                for (int y = 0; allOctopusesFlush && y < map.Count; y++)
+                {
+                    for (int x = 0; allOctopusesFlush && x < map[0].Count; x++)
+                    {
+                        if (map[y][x].energyValue != 0)
+                        {
+                            allOctopusesFlush = false;
+                        }
+                    }
+                }
+
+                if (!allOctopusesFlush)
+                    ++step;
+                else
+                    stop = true;
             }
 
             PrintMap(map);
             //
 
-            Console.WriteLine("Output: {0}", numOfFlashes);
+            Console.WriteLine("Output: {0}", step);
         }
 
         private static void PrintMap(List<List<Octopuse>> map)
