@@ -15,7 +15,7 @@ namespace Star_1
 
         static void Flash(int x, int y, List<List<Octopuse>> map)
         {
-            if (map[y][x].energyValue < 9)
+            if (map[y][x].energyValue <= 9)
                 return;
 
             map[y][x].flashed = true;
@@ -81,7 +81,7 @@ namespace Star_1
 
             // Searching for an answer
             long numOfFlashes = 0;
-            long maxSteps = 10;
+            long maxSteps = 100;
             for (int i = 0; i < maxSteps; i++)
             {
                 for (int y = 0; y < map.Count; y++)
@@ -100,33 +100,45 @@ namespace Star_1
                     {
                         for (int x = 0; x < map[0].Count; x++)
                         {
-                            if (map[y][x].energyValue >= 9)
+                            if (map[y][x].energyValue > 9 && !map[y][x].flashed)
                             {
                                 Flash(x, y, map);
                                 allFlashed = false;
                             }
                         }
                     }
-
-                    if (!allFlashed)
-                        for (int y = 0; y < map.Count; y++)
-                        {
-                            for (int x = 0; x < map[0].Count; x++)
-                            {
-                                if (map[y][x].flashed)
-                                {
-                                    ++numOfFlashes;
-                                    map[y][x].energyValue = 0;
-                                    map[y][x].flashed = false;
-                                }
-                            }
-                        }
-
                 } while (!allFlashed);
+
+                for (int y = 0; y < map.Count; y++)
+                {
+                    for (int x = 0; x < map[0].Count; x++)
+                    {
+                        if (map[y][x].flashed)
+                        {
+                            ++numOfFlashes;
+                            map[y][x].energyValue = 0;
+                            map[y][x].flashed = false;
+                        }
+                    }
+                }
             }
+
+            PrintMap(map);
             //
 
             Console.WriteLine("Output: {0}", numOfFlashes);
+        }
+
+        private static void PrintMap(List<List<Octopuse>> map)
+        {
+            for (int y = 0; y < map.Count; y++)
+            {
+                for (int x = 0; x < map[0].Count; x++)
+                {
+                    Console.Write(map[y][x].energyValue);
+                }
+                Console.WriteLine();
+            }
         }
     }
 }
