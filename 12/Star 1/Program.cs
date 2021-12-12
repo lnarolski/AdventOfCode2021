@@ -67,77 +67,63 @@ namespace Star_1
             }
 
             // Parsing input data
-            List<List<Octopuse>> map = new List<List<Octopuse>>();
+            Dictionary<string, List<string>> connections = new Dictionary<string, List<string>>();
             foreach (var line in fileLines)
             {
-                List<long> temp = line.ToCharArray().Select(s => long.Parse(s.ToString())).ToList();
-                map.Add(new List<Octopuse>());
-                for (int i = 0; i < temp.Count; i++)
+                string[] temp = line.Split('-');
+                if (!connections.ContainsKey(temp[0]))
                 {
-                    map[map.Count - 1].Add(new Octopuse() { energyValue = temp[i], flashed = false });
+                    connections.Add(temp[0], new List<string>() { temp[1] });
+                }
+                else
+                {
+                    connections[temp[0]].Add(temp[1]);
+                }
+
+                if (!connections.ContainsKey(temp[1]))
+                {
+                    connections.Add(temp[1], new List<string>() { temp[0] });
+                }
+                else
+                {
+                    connections[temp[1]].Add(temp[0]);
                 }
             }
             //
 
             // Searching for an answer
-            long numOfFlashes = 0;
-            long maxSteps = 100;
-            for (int i = 0; i < maxSteps; i++)
-            {
-                for (int y = 0; y < map.Count; y++)
-                {
-                    for (int x = 0; x < map[0].Count; x++)
-                    {
-                        ++map[y][x].energyValue;
-                    }
-                }
-
-                bool allFlashed;
-                do
-                {
-                    allFlashed = true;
-                    for (int y = 0; y < map.Count; y++)
-                    {
-                        for (int x = 0; x < map[0].Count; x++)
-                        {
-                            if (map[y][x].energyValue > 9 && !map[y][x].flashed)
-                            {
-                                Flash(x, y, map);
-                                allFlashed = false;
-                            }
-                        }
-                    }
-                } while (!allFlashed);
-
-                for (int y = 0; y < map.Count; y++)
-                {
-                    for (int x = 0; x < map[0].Count; x++)
-                    {
-                        if (map[y][x].flashed)
-                        {
-                            ++numOfFlashes;
-                            map[y][x].energyValue = 0;
-                            map[y][x].flashed = false;
-                        }
-                    }
-                }
-            }
-
-            PrintMap(map);
+            List<List<string>> paths = new List<List<string>>();
+            bool stop = false;
+            string currentVert = "start";
+            List<string> currentPath = new List<string>() { "start" };
+            FindPath(currentVert, connections, paths, currentPath);
             //
 
-            Console.WriteLine("Output: {0}", numOfFlashes);
+            Console.WriteLine("Output: {0}", paths.Count);
         }
 
-        private static void PrintMap(List<List<Octopuse>> map)
+        private static void FindPath(string currentVert,  Dictionary<string, List<string>> connections, List<List<string>> paths, List<string> currentPath)
         {
-            for (int y = 0; y < map.Count; y++)
+            foreach (var connection in connections[currentVert])
             {
-                for (int x = 0; x < map[0].Count; x++)
+                List<string> temp = new List<string>(currentPath);
+
+                if (connection.Any(c => char.IsLower(c)))
                 {
-                    Console.Write(map[y][x].energyValue);
+                    if (temp.Contains(connection))
+                    {
+                        continue;
+                    }
                 }
-                Console.WriteLine();
+
+                temp.Add(connection);
+                if (connection == "end")
+                {
+                    paths.Add(temp);
+                    continue;
+                }
+
+                FindPath(connection, connections, paths, temp);
             }
         }
     }
