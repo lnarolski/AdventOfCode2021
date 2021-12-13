@@ -20,87 +20,106 @@ namespace Star_2
             }
 
             // Parsing input data
-            Dictionary<string, List<string>> connections = new Dictionary<string, List<string>>();
+            int maxX = int.MinValue, maxY = int.MinValue;
+            List<List<char>> map = new List<List<char>>();
+            List<List<int>> dots = new List<List<int>>();
+            bool folds = false;
             foreach (var line in fileLines)
             {
-                string[] temp = line.Split('-');
-                if (!connections.ContainsKey(temp[0]))
+                if (line == "")
                 {
-                    connections.Add(temp[0], new List<string>() { temp[1] });
-                }
-                else
-                {
-                    connections[temp[0]].Add(temp[1]);
+                    folds = true;
+
+                    for (int y = 0; y < maxY + 1; y++)
+                    {
+                        map.Add(new List<char>());
+                        for (int x = 0; x < maxX + 1; x++)
+                        {
+                            map[map.Count - 1].Add('.');
+                        }
+                    }
+
+                    foreach (var dot in dots)
+                    {
+                        map[dot[1]][dot[0]] = '#';
+                    }
+
+                    continue;
                 }
 
-                if (!connections.ContainsKey(temp[1]))
+                if (!folds)
                 {
-                    connections.Add(temp[1], new List<string>() { temp[0] });
+                    int[] temp = line.Split(',').Select(s => int.Parse(s)).ToArray();
+                    if (temp[0] > maxX)
+                        maxX = temp[0];
+                    if (temp[1] > maxY)
+                        maxY = temp[1];
+
+                    dots.Add(temp.ToList());
                 }
                 else
                 {
-                    connections[temp[1]].Add(temp[0]);
+                    string[] temp = line.Split("fold along ")[1].Split('=');
+                    int value = int.Parse(temp[1]);
+
+                    if (temp[0] == "x")
+                    {
+                        for (int y = 0; y < map.Count; y++)
+                        {
+                            for (int x = value + 1; x < map[0].Count; x++)
+                            {
+                                if (map[y][x] == '#')
+                                {
+                                    map[y][value - (x - value)] = '#';
+                                    map[y][x] = '.';
+                                }
+                            }
+                        }
+
+                        for (int y = 0; y < map.Count; y++)
+                        {
+                            map[y][value] = '.';
+                        }
+
+                        maxX = value;
+                    }
+                    else // then y
+                    {
+                        for (int y = value + 1; y < map.Count; y++)
+                        {
+                            for (int x = 0; x < map[0].Count; x++)
+                            {
+                                if (map[y][x] == '#')
+                                {
+                                    map[value - (y - value)][x] = '#';
+                                    map[y][x] = '.';
+                                }
+                            }
+                        }
+
+                        for (int x = 0; x < map[value].Count; x++)
+                        {
+                            map[value][x] = '.';
+                        }
+
+                        maxY = value;
+                    }
                 }
             }
             //
 
             // Searching for an answer
-            List<List<string>> paths = new List<List<string>>();
-            bool stop = false;
-            string currentVert = "start";
-            List<string> currentPath = new List<string>() { "start" };
-            FindPath(currentVert, connections, paths, currentPath);
-            //PrintPaths(paths);
-            //
-
-            Console.WriteLine("Output: {0}", paths.Count);
-        }
-
-        private static void PrintPaths(List<List<string>> paths)
-        {
-            Console.WriteLine();
-            foreach (var path in paths)
+            for (int y = 0; y < maxY; y++)
             {
-                foreach (var vert in path)
+                for (int x = 0; x < maxX; x++)
                 {
-                    Console.Write(vert + ",");
+                    Console.Write(map[y][x]);
                 }
                 Console.WriteLine();
             }
-        }
+            //
 
-        private static void FindPath(string currentVert, Dictionary<string, List<string>> connections, List<List<string>> paths, List<string> currentPath, bool smallCaveVisitedTwice = false)
-        {
-            foreach (var connection in connections[currentVert])
-            {
-                if (connection == "start")
-                    continue;
-
-                bool smallCaveVisitedTwiceCopy = smallCaveVisitedTwice;
-                List<string> temp = new List<string>(currentPath);
-
-                if (connection.Any(c => char.IsLower(c)))
-                {
-                    int counter = temp.FindAll(delegate (string s) { return s == connection; }).Count;
-                    if (counter >= 2)
-                    {
-                        continue;
-                    }
-                    if (smallCaveVisitedTwice && temp.Contains(connection))
-                        continue;
-                    if (counter == 1)
-                        smallCaveVisitedTwiceCopy = true;
-                }
-
-                temp.Add(connection);
-                if (connection == "end")
-                {
-                    paths.Add(temp);
-                    continue;
-                }
-
-                FindPath(connection, connections, paths, temp, smallCaveVisitedTwiceCopy);
-            }
+            //Console.WriteLine("Output: {0}", visibleDots);
         }
     }
 }
