@@ -50,22 +50,16 @@ namespace Star_1
             int maxSteps = 10;
             for (int i = 0; i < maxSteps; i++)
             {
-                do
+                for (int j = 0; j < polymerTemplate.Length - 1; j++)
                 {
-                    stop = true;
-
-                    for (int j = 0; j < polymerTemplate.Length - 1; j++)
+                    string polymerTemplatePart = polymerTemplate.Substring(j, 2);
+                    if (pairInsertionRules.ContainsKey(polymerTemplatePart))
                     {
-                        string polymerTemplatePart = polymerTemplate.Substring(j, 2);
-                        if (pairInsertionRules.ContainsKey(polymerTemplatePart))
-                        {
-                            polymerTemplate = polymerTemplate.Insert(j + 1, pairInsertionRules[polymerTemplatePart].ToString());
+                        polymerTemplate = polymerTemplate.Insert(j + 1, pairInsertionRules[polymerTemplatePart].ToString());
 
-                            j += 2;
-                            stop = false;
-                        }
+                        j += 1;
                     }
-                } while (!stop);
+                }
             }
 
             long minCount = long.MaxValue, maxCount = long.MinValue;
@@ -79,11 +73,13 @@ namespace Star_1
                         minCount = temp;
                     if (temp > maxCount)
                         maxCount = temp;
+
+                    characters.Add(polymerTemplate[i]);
                 }
             }
             //
 
-            Console.WriteLine("Output: {0}", maxSteps - minCount);
+            Console.WriteLine("Output: {0}", maxCount - minCount);
         }
     }
 }
