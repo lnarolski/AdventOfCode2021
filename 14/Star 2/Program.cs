@@ -20,106 +20,80 @@ namespace Star_2
             }
 
             // Parsing input data
-            int maxX = int.MinValue, maxY = int.MinValue;
-            List<List<char>> map = new List<List<char>>();
-            List<List<int>> dots = new List<List<int>>();
-            bool folds = false;
+            LinkedList<char> polymerTemplate = new LinkedList<char>();
+            Dictionary<string, char> pairInsertionRules = new Dictionary<string, char>();
+            bool rules = false;
             foreach (var line in fileLines)
             {
                 if (line == "")
                 {
-                    folds = true;
-
-                    for (int y = 0; y < maxY + 1; y++)
-                    {
-                        map.Add(new List<char>());
-                        for (int x = 0; x < maxX + 1; x++)
-                        {
-                            map[map.Count - 1].Add('.');
-                        }
-                    }
-
-                    foreach (var dot in dots)
-                    {
-                        map[dot[1]][dot[0]] = '#';
-                    }
+                    rules = true;
 
                     continue;
                 }
 
-                if (!folds)
+                if (!rules)
                 {
-                    int[] temp = line.Split(',').Select(s => int.Parse(s)).ToArray();
-                    if (temp[0] > maxX)
-                        maxX = temp[0];
-                    if (temp[1] > maxY)
-                        maxY = temp[1];
-
-                    dots.Add(temp.ToList());
+                    polymerTemplate = new LinkedList<char>(line);
                 }
                 else
                 {
-                    string[] temp = line.Split("fold along ")[1].Split('=');
-                    int value = int.Parse(temp[1]);
+                    string[] temp = line.Split(" -> ");
 
-                    if (temp[0] == "x")
-                    {
-                        for (int y = 0; y < map.Count; y++)
-                        {
-                            for (int x = value + 1; x < map[0].Count; x++)
-                            {
-                                if (map[y][x] == '#')
-                                {
-                                    map[y][value - (x - value)] = '#';
-                                    map[y][x] = '.';
-                                }
-                            }
-                        }
-
-                        for (int y = 0; y < map.Count; y++)
-                        {
-                            map[y][value] = '.';
-                        }
-
-                        maxX = value;
-                    }
-                    else // then y
-                    {
-                        for (int y = value + 1; y < map.Count; y++)
-                        {
-                            for (int x = 0; x < map[0].Count; x++)
-                            {
-                                if (map[y][x] == '#')
-                                {
-                                    map[value - (y - value)][x] = '#';
-                                    map[y][x] = '.';
-                                }
-                            }
-                        }
-
-                        for (int x = 0; x < map[value].Count; x++)
-                        {
-                            map[value][x] = '.';
-                        }
-
-                        maxY = value;
-                    }
+                    pairInsertionRules.Add(temp[0], temp[1][0]);
                 }
             }
             //
 
             // Searching for an answer
-            for (int y = 0; y < maxY; y++)
+            DateTime dateTime = DateTime.Now;
+
+            bool stop;
+            int maxSteps = 40;
+            for (int i = 0; i < maxSteps; i++)
             {
-                for (int x = 0; x < maxX; x++)
+                LinkedListNode<char> linkedListNode = polymerTemplate.First;
+
+                for (int j = 0; j < polymerTemplate.Count - 1; j++)
                 {
-                    Console.Write(map[y][x]);
+                    string polymerTemplatePart = "";
+
+                    polymerTemplatePart += linkedListNode.Value;
+                    linkedListNode = linkedListNode.Next;
+                    polymerTemplatePart += linkedListNode.Value;
+
+                    if (pairInsertionRules.ContainsKey(polymerTemplatePart))
+                    {
+                        polymerTemplate.AddBefore(linkedListNode, pairInsertionRules[polymerTemplatePart]);
+
+                        j += 1;
+                    }
                 }
-                Console.WriteLine();
+
+                Console.WriteLine(i);
+                Console.WriteLine("Execution time: {0}", (DateTime.Now - dateTime).TotalSeconds);
+                dateTime = DateTime.Now;
+            }
+
+            long minCount = long.MaxValue, maxCount = long.MinValue;
+            char[] polymerTemplateChar = polymerTemplate.ToArray();
+            HashSet<char> characters = new HashSet<char>();
+            for (int i = 0; i < polymerTemplate.Count; i++)
+            {
+                if (!characters.Contains(polymerTemplateChar[i]))
+                {
+                    int temp = polymerTemplate.Count(c => c == polymerTemplateChar[i]);
+                    if (temp < minCount)
+                        minCount = temp;
+                    if (temp > maxCount)
+                        maxCount = temp;
+
+                    characters.Add(polymerTemplateChar[i]);
+                }
             }
             //
 
-            //Console.WriteLine("Output: {0}", visibleDots);
+            Console.WriteLine("Output: {0}", maxCount - minCount);
         }
     }
 }

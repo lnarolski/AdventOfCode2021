@@ -46,6 +46,8 @@ namespace Star_1
             //
 
             // Searching for an answer
+            DateTime dateTime = DateTime.Now;
+
             bool stop;
             int maxSteps = 10;
             for (int i = 0; i < maxSteps; i++)
@@ -77,6 +79,9 @@ namespace Star_1
                     characters.Add(polymerTemplate[i]);
                 }
             }
+
+            Console.WriteLine("Execution time: {0}", (DateTime.Now - dateTime).TotalMilliseconds);
+
             //
 
             Console.WriteLine("Output: {0}", maxCount - minCount);
