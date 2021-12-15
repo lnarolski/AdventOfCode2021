@@ -4,22 +4,14 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 
-// A-Star-Sharp: https://github.com/davecusatis/A-Star-Sharp  Contributors: davecusatis, Brad Hannah
+// Based on A-Star-Sharp: https://github.com/davecusatis/A-Star-Sharp  Contributors: davecusatis, Brad Hannah
 namespace AStarSharp
 {
     public class Node
     {
         // Change this depending on what the desired size is for each element in the grid
-        public static int NODE_SIZE = 1;
         public Node Parent;
         public Vector2 Position;
-        public Vector2 Center
-        {
-            get
-            {
-                return new Vector2(Position.X + NODE_SIZE / 2, Position.Y + NODE_SIZE / 2);
-            }
-        }
         public float DistanceToTarget;
         public float Cost;
         public float Weight;
@@ -35,12 +27,12 @@ namespace AStarSharp
         }
         public bool Walkable;
 
-        public Node(Vector2 pos, bool walkable, float weight = 1, float cost = 1)
+        public Node(Vector2 pos, bool walkable, float weight = 1)
         {
             Parent = null;
             Position = pos;
             DistanceToTarget = -1;
-            Cost = cost;
+            Cost = 1;
             Weight = weight;
             Walkable = walkable;
         }
@@ -71,8 +63,8 @@ namespace AStarSharp
 
         public Stack<Node> FindPath(Vector2 Start, Vector2 End)
         {
-            Node start = new Node(new Vector2((int)(Start.X / Node.NODE_SIZE), (int)(Start.Y / Node.NODE_SIZE)), true);
-            Node end = new Node(new Vector2((int)(End.X / Node.NODE_SIZE), (int)(End.Y / Node.NODE_SIZE)), true);
+            Node start = new Node(new Vector2((int)(Start.X), (int)(Start.Y)), true);
+            Node end = new Node(new Vector2((int)(End.X), (int)(End.Y)), true);
 
             Stack<Node> Path = new Stack<Node>();
             List<Node> OpenList = new List<Node>();
@@ -133,19 +125,19 @@ namespace AStarSharp
 
             if (row + 1 < GridRows)
             {
-                temp.Add(Grid[col][row + 1]);
+                temp.Add(Grid[row + 1][col]);
             }
             if (row - 1 >= 0)
             {
-                temp.Add(Grid[col][row - 1]);
+                temp.Add(Grid[row - 1][col]);
             }
             if (col - 1 >= 0)
             {
-                temp.Add(Grid[col - 1][row]);
+                temp.Add(Grid[row][col - 1]);
             }
             if (col + 1 < GridCols)
             {
-                temp.Add(Grid[col + 1][row]);
+                temp.Add(Grid[row][col + 1]);
             }
 
             return temp;
@@ -157,12 +149,6 @@ namespace Star_1
 {
     class Program
     {
-        class Cavepart
-        {
-            public int riskLevel;
-            public bool _checked = false;
-        }
-
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World from Star 1!");
@@ -177,6 +163,8 @@ namespace Star_1
 
             // Parsing input data
             List<List<AStarSharp.Node>> map = new List<List<AStarSharp.Node>>();
+            List<List<char>> mapChar = new List<List<char>>();
+
             int y = 0, x = 0;
             foreach (var line in fileLines)
             {
@@ -190,52 +178,35 @@ namespace Star_1
 
                     ++x;
                 }
-                
+
+                mapChar.Add(line.ToList());
+
                 ++y;
             }
             //
 
             // Searching for an answer
-            //Tuple<int, int> start = new Tuple<int, int>(0, 0);
-            //Tuple<int, int> end = new Tuple<int, int>(map.Count - 1, map[0].Count -1);
-            //Tuple<int, int> currentPostition = start;
-
-            //bool found;
-            //do
-            //{
-            //    found = true;
-
-            //    if (currentPostition.Item1 != 0 && !map[currentPostition.Item1 - 1][currentPostition.Item2]._checked) //up
-            //    {
-                    
-            //    }
-            //    if (currentPostition.Item1 != map.Count - 1 && !map[currentPostition.Item1 + 1][currentPostition.Item2]._checked) //down
-            //    {
-
-            //    }
-            //    if (currentPostition.Item2 != 0 && !map[currentPostition.Item1][currentPostition.Item2 - 1]._checked) //left
-            //    {
-
-            //    }
-            //    if (currentPostition.Item2 != map[0].Count - 1 && !map[currentPostition.Item1][currentPostition.Item2 + 1]._checked) //right
-            //    {
-
-            //    }
-
-
-            //} while (!found);
-
             AStarSharp.Astar astar = new AStarSharp.Astar(map);
             Stack<AStarSharp.Node> path = astar.FindPath(map[0][0].Position, map[map.Count - 1][map[0].Count - 1].Position);
 
             long totalRisk = 0;
-            totalRisk = (long) path.Peek().Cost;
+            totalRisk = (long)path.Last().F - 1;
 
             Console.WriteLine("Path: ");
             foreach (var item in path)
             {
-                Console.WriteLine("{0}: {1}", item.Position, item.Weight);
+                mapChar[(int)item.Position.Y][(int)item.Position.X] = '*';
             }
+
+            for (y = 0; y < mapChar.Count; y++)
+            {
+                for (x = 0; x < mapChar.Count; x++)
+                {
+                    Console.Write(mapChar[y][x]);
+                }
+                Console.WriteLine();
+            }
+
             //
 
             Console.WriteLine("Output: {0}", totalRisk);
