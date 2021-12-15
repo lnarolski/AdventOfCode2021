@@ -20,8 +20,10 @@ namespace Star_1
             }
 
             // Parsing input data
-            Dictionary<string, int> polymerTemplate = new Dictionary<string, int>();
+            Dictionary<string, long> polymerTemplate = new Dictionary<string, long>();
             Dictionary<string, char> pairInsertionRules = new Dictionary<string, char>();
+            char lastCharacter = '0';
+
             bool rules = false;
             foreach (var line in fileLines)
             {
@@ -45,6 +47,8 @@ namespace Star_1
                             ++polymerTemplate[line.Substring(i, 2)];
                         }
                     }
+
+                    lastCharacter = line[line.Length - 1];
                 }
                 else
                 {
@@ -58,10 +62,10 @@ namespace Star_1
             // Searching for an answer
             DateTime dateTime = DateTime.Now;
 
-            int maxSteps = 10;
+            int maxSteps = 40;
             for (int i = 0; i < maxSteps; i++)
             {
-                Dictionary<string, int> polymerTemplateCopy = new Dictionary<string, int>(polymerTemplate);
+                Dictionary<string, long> polymerTemplateCopy = new Dictionary<string, long>();
 
                 foreach (var polymer in polymerTemplate)
                 {
@@ -69,7 +73,7 @@ namespace Star_1
                     {
                         if (!polymerTemplateCopy.ContainsKey(polymer.Key[0].ToString() + pairInsertionRules[polymer.Key]))
                         {
-                            polymerTemplateCopy.Add(polymer.Key[0].ToString() + pairInsertionRules[polymer.Key], 1);
+                            polymerTemplateCopy.Add(polymer.Key[0].ToString() + pairInsertionRules[polymer.Key], polymer.Value);
                         }
                         else
                         {
@@ -78,7 +82,7 @@ namespace Star_1
 
                         if (!polymerTemplateCopy.ContainsKey(pairInsertionRules[polymer.Key].ToString() + polymer.Key[1]))
                         {
-                            polymerTemplateCopy.Add(pairInsertionRules[polymer.Key].ToString() + polymer.Key[1], 1);
+                            polymerTemplateCopy.Add(pairInsertionRules[polymer.Key].ToString() + polymer.Key[1], polymer.Value);
                         }
                         else
                         {
@@ -87,22 +91,33 @@ namespace Star_1
                     }
                 }
 
-                polymerTemplate = new Dictionary<string, int>(polymerTemplateCopy);
+                polymerTemplate = new Dictionary<string, long>(polymerTemplateCopy);
             }
 
             long minCount = long.MaxValue, maxCount = long.MinValue;
-            HashSet<char> characters = new HashSet<char>();
+            Dictionary<char, long> characters = new Dictionary<char, long>();
             foreach (var polymer in polymerTemplate)
             {
-                if (!characters.Contains(polymer.Key[0]))
+                if (characters.ContainsKey(polymer.Key[0]))
                 {
-                    int temp = polymerTemplate.Count(c => c == polymer.Key[0]);
-                    if (temp < minCount)
-                        minCount = temp;
-                    if (temp > maxCount)
-                        maxCount = temp;
+                    characters[polymer.Key[0]] += polymer.Value;
+                }
+                else
+                {
+                    characters.Add(polymer.Key[0], polymer.Value);
+                }
+            }
+            characters[lastCharacter] += 1;
 
-                    characters.Add(polymer);
+            foreach (var character in characters)
+            {
+                if (character.Value < minCount)
+                {
+                    minCount = character.Value;
+                }
+                if (character.Value > maxCount)
+                {
+                    maxCount = character.Value;
                 }
             }
 
