@@ -91,7 +91,7 @@ namespace AStarSharp
                         {
                             n.Parent = current;
                             n.DistanceToTarget = Math.Abs(n.Position.X - end.Position.X) + Math.Abs(n.Position.Y - end.Position.Y);
-                            n.Cost = n.Weight + n.Parent.Cost;
+                            n.Cost = n.Weight*100 + n.Parent.Cost; // HAD TO REINFORCE VALUE OF WEIGHT IN FUNCTION TO GET OPTIMAL PATH
                             OpenList.Add(n);
                             OpenList = OpenList.OrderBy(node => node.F).ToList<Node>();
                         }
@@ -190,7 +190,7 @@ namespace Star_2
             {
                 for (x = tempCount; x < tempCount * 5; x++)
                 {
-                    map[y].Add(new AStarSharp.Node(new Vector2(x, y), true, map[y][x - 10].Weight > 8 ? 1 : map[y][x - 10].Weight + 1));
+                    map[y].Add(new AStarSharp.Node(new Vector2(x, y), true, map[y][x - tempCount].Weight > 8 ? 1 : map[y][x - tempCount].Weight + 1));
                 }
             }
 
@@ -201,7 +201,7 @@ namespace Star_2
                 var listToAdd = new List<AStarSharp.Node>();
                 for (x = 0; x < map[0].Count; x++)
                 {
-                    listToAdd.Add(new AStarSharp.Node(new Vector2(x, y), true, map[y - 10][x].Weight > 8 ? 1 : map[y - 10][x].Weight + 1));
+                    listToAdd.Add(new AStarSharp.Node(new Vector2(x, y), true, map[y - tempCount][x].Weight > 8 ? 1 : map[y - tempCount][x].Weight + 1));
                 }
                 map.Add(listToAdd);
             }
@@ -212,31 +212,10 @@ namespace Star_2
             Stack<AStarSharp.Node> path = astar.FindPath(map[0][0].Position, map[map.Count - 1][map[0].Count - 1].Position);
 
             long totalRisk = 0;
-            totalRisk = (long)path.Last().F - 1;
-
-            //Console.WriteLine("Path: ");
-            //foreach (var item in path)
-            //{
-            //    mapChar[(int)item.Position.Y][(int)item.Position.X] = '*';
-            //}
-
-            //for (y = 0; y < mapChar.Count; y++)
-            //{
-            //    for (x = 0; x < mapChar.Count; x++)
-            //    {
-            //        Console.Write(mapChar[y][x]);
-            //    }
-            //    Console.WriteLine();
-            //}
-
-            //for (y = 0; y < map.Count; y++)
-            //{
-            //    for (x = 0; x < map[0].Count; x++)
-            //    {
-            //        Console.Write(map[y][x].Weight);
-            //    }
-            //    Console.WriteLine();
-            //}
+            foreach (var item in path)
+            {
+                totalRisk += (long)map[(int)item.Position.Y][(int)item.Position.X].Weight;
+            }
 
             //
 
