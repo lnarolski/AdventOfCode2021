@@ -42,7 +42,31 @@ namespace Star_1
 
             long packetVersion = Convert.ToInt64(binaryLine.Substring(0, 3), 2);
             long typeID = Convert.ToInt64(binaryLine.Substring(3, 3), 2);
-            long 
+
+            sumOfVersionNumbers += packetVersion;
+
+            if (typeID != 4)
+                return sumOfVersionNumbers;
+
+            if (binaryLine[6] == '0') // -> total length in bits of the sub-packets
+            {
+                long lengthInBits = Convert.ToInt64(binaryLine.Substring(7, 15), 2);
+
+                int subPacketStart = 22;
+                while (subPacketStart < binaryLine.Length - lengthInBits)
+                {
+                    packetVersion = Convert.ToInt64(binaryLine.Substring(subPacketStart, 3), 2);
+                    typeID = Convert.ToInt64(binaryLine.Substring(subPacketStart + 3, 3), 2);
+
+                    sumOfVersionNumbers += packetVersion;
+
+
+                }
+            }
+            else // length type ID = 1 -> number of sub-packets immediately contained
+            {
+                long numOfSubpackets = Convert.ToInt64(binaryLine.Substring(7, 11), 2);
+            }
 
             return sumOfVersionNumbers;
         }
