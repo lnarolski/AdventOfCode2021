@@ -46,26 +46,45 @@ namespace Star_1
             sumOfVersionNumbers += packetVersion;
 
             if (typeID != 4)
-                return sumOfVersionNumbers;
-
-            if (binaryLine[6] == '0') // -> total length in bits of the sub-packets
             {
-                long lengthInBits = Convert.ToInt64(binaryLine.Substring(7, 15), 2);
-
-                int subPacketStart = 22;
-                while (subPacketStart < binaryLine.Length - lengthInBits)
+                if (binaryLine[6] == '0') // -> total length in bits of the sub-packets
                 {
-                    packetVersion = Convert.ToInt64(binaryLine.Substring(subPacketStart, 3), 2);
-                    typeID = Convert.ToInt64(binaryLine.Substring(subPacketStart + 3, 3), 2);
+                    long lengthInBits = Convert.ToInt64(binaryLine.Substring(7, 15), 2);
 
-                    sumOfVersionNumbers += packetVersion;
+                    int subPacketStart = 22;
+                    while (subPacketStart < binaryLine.Length - lengthInBits)
+                    {
+                        packetVersion = Convert.ToInt64(binaryLine.Substring(subPacketStart, 3), 2);
+                        typeID = Convert.ToInt64(binaryLine.Substring(subPacketStart + 3, 3), 2);
+
+                        sumOfVersionNumbers += packetVersion;
 
 
+                    }
+                }
+                else // length type ID = 1 -> number of sub-packets immediately contained
+                {
+                    long numOfSubpackets = Convert.ToInt64(binaryLine.Substring(7, 11), 2);
                 }
             }
-            else // length type ID = 1 -> number of sub-packets immediately contained
+            else
             {
-                long numOfSubpackets = Convert.ToInt64(binaryLine.Substring(7, 11), 2);
+                string literalValue = "";
+                bool stop = false;
+                int i = 7;
+                while (!stop)
+                {
+                    if (binaryLine[i] == '1')
+                    {
+                        literalValue += binaryLine.Substring(i + 1, 4);
+                        i += 5;
+
+                    }
+                    else // last group packet
+                    {
+                        literalValue += binaryLine.Substring(i + 1, 4);
+                    }
+                }
             }
 
             return sumOfVersionNumbers;
