@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Star_1
+namespace Star_2
 {
     class Program
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World from Star 1!");
+            Console.WriteLine("Hello World from Star 2!");
 
             var fileLines = File.ReadLines("../../../../input.txt");
             List<string> input = new List<string>();
@@ -20,112 +20,105 @@ namespace Star_1
             }
 
             // Parsing input data
-            Dictionary<string, long> polymerTemplate = new Dictionary<string, long>();
-            Dictionary<string, char> pairInsertionRules = new Dictionary<string, char>();
-            char lastCharacter = '0';
+            string[] temp = input[0].Split("target area: ")[1].Split(", ");
 
-            bool rules = false;
-            foreach (var line in fileLines)
+            int x1 = int.Parse(temp[0].Split("x=")[1].Split("..")[0]);
+            int x2 = int.Parse(temp[0].Split("x=")[1].Split("..")[1]);
+            int y1 = int.Parse(temp[1].Split("y=")[1].Split("..")[0]);
+            int y2 = int.Parse(temp[1].Split("y=")[1].Split("..")[1]);
+
+            Pair areaStart; // x, y
+            Pair areaEnd; // x, y
+
+            if (x1 < x2)
             {
-                if (line == "")
+                if (y1 > y2)
                 {
-                    rules = true;
-
-                    continue;
-                }
-
-                if (!rules)
-                {
-                    for (int i = 0; i < line.Length - 1; i++)
-                    {
-                        if (!polymerTemplate.ContainsKey(line.Substring(i, 2)))
-                        {
-                            polymerTemplate.Add(line.Substring(i, 2), 1);
-                        }
-                        else
-                        {
-                            ++polymerTemplate[line.Substring(i, 2)];
-                        }
-                    }
-
-                    lastCharacter = line[line.Length - 1];
+                    areaStart = new Pair(x1, y1);
+                    areaEnd = new Pair(x2, y2);
                 }
                 else
                 {
-                    string[] temp = line.Split(" -> ");
-
-                    pairInsertionRules.Add(temp[0], temp[1][0]);
+                    areaStart = new Pair(x1, y2);
+                    areaEnd = new Pair(x2, y1);
+                }
+            }
+            else
+            {
+                if (y1 > y2)
+                {
+                    areaStart = new Pair(x2, y1);
+                    areaEnd = new Pair(x1, y2);
+                }
+                else
+                {
+                    areaStart = new Pair(x2, y2);
+                    areaEnd = new Pair(x1, y1);
                 }
             }
             //
 
             // Searching for an answer
-            DateTime dateTime = DateTime.Now;
+            int maxX = 100000, maxY = 100000;
 
-            int maxSteps = 40;
-            for (int i = 0; i < maxSteps; i++)
+            long numOfVelocityValues = 0;
+            for (int xVelocity = -1000; xVelocity <= 1000; xVelocity++)
             {
-                Dictionary<string, long> polymerTemplateCopy = new Dictionary<string, long>();
-
-                foreach (var polymer in polymerTemplate)
+                for (int yVelocity = -1000; yVelocity <= 1000; yVelocity++)
                 {
-                    if (pairInsertionRules.ContainsKey(polymer.Key))
+                    Pair position = new Pair(0, 0); // start position
+                    Pair currentVelocity = new Pair(xVelocity, yVelocity);
+
+                    position.x += currentVelocity.x;
+                    position.y += currentVelocity.y;
+
+                    while (true)
                     {
-                        if (!polymerTemplateCopy.ContainsKey(polymer.Key[0].ToString() + pairInsertionRules[polymer.Key]))
+                        if (position.x > maxX || position.x < -maxX || position.y < -maxY || position.y > maxY)
                         {
-                            polymerTemplateCopy.Add(polymer.Key[0].ToString() + pairInsertionRules[polymer.Key], polymer.Value);
-                        }
-                        else
-                        {
-                            polymerTemplateCopy[polymer.Key[0].ToString() + pairInsertionRules[polymer.Key]] += polymer.Value;
+                            break;
                         }
 
-                        if (!polymerTemplateCopy.ContainsKey(pairInsertionRules[polymer.Key].ToString() + polymer.Key[1]))
+                        if (position.x >= areaStart.x && position.x <= areaEnd.x && position.y <= areaStart.y && position.y >= areaEnd.y)
                         {
-                            polymerTemplateCopy.Add(pairInsertionRules[polymer.Key].ToString() + polymer.Key[1], polymer.Value);
+                            ++numOfVelocityValues;
+
+                            //Console.WriteLine("Initial velocity: {0},{1}", xVelocity, yVelocity);
+
+                            break;
                         }
-                        else
+
+                        if (currentVelocity.x > 0)
                         {
-                            polymerTemplateCopy[pairInsertionRules[polymer.Key].ToString() + polymer.Key[1]] += polymer.Value;
+                            --currentVelocity.x;
                         }
+                        else if (currentVelocity.x < 0)
+                        {
+                            ++currentVelocity.x;
+                        }
+
+                        --currentVelocity.y;
+
+                        position.x += currentVelocity.x;
+                        position.y += currentVelocity.y;
                     }
                 }
-
-                polymerTemplate = new Dictionary<string, long>(polymerTemplateCopy);
             }
-
-            long minCount = long.MaxValue, maxCount = long.MinValue;
-            Dictionary<char, long> characters = new Dictionary<char, long>();
-            foreach (var polymer in polymerTemplate)
-            {
-                if (characters.ContainsKey(polymer.Key[0]))
-                {
-                    characters[polymer.Key[0]] += polymer.Value;
-                }
-                else
-                {
-                    characters.Add(polymer.Key[0], polymer.Value);
-                }
-            }
-            characters[lastCharacter] += 1;
-
-            foreach (var character in characters)
-            {
-                if (character.Value < minCount)
-                {
-                    minCount = character.Value;
-                }
-                if (character.Value > maxCount)
-                {
-                    maxCount = character.Value;
-                }
-            }
-
-            Console.WriteLine("Execution time: {0}", (DateTime.Now - dateTime).TotalMilliseconds);
-
             //
 
-            Console.WriteLine("Output: {0}", maxCount - minCount);
+            Console.WriteLine("Output: {0}", numOfVelocityValues);
+        }
+
+        class Pair
+        {
+            public long x;
+            public long y;
+
+            public Pair(long x, long y)
+            {
+                this.x = x;
+                this.y = y;
+            }
         }
     }
 }
